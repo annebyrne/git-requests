@@ -8,6 +8,10 @@ import (
   "os"
 )
 
+type PullRequest struct {
+  Title, Author  string
+}
+
 func getClient(ctx context.Context, token string) *github.Client {
   ts := oauth2.StaticTokenSource(
     &oauth2.Token{AccessToken: token},
@@ -38,18 +42,38 @@ func getCurrentUser(ctx context.Context, client *github.Client) string {
   return user
 }
 
-func main() {
+func fetchPullRequests(client *github.Client, ctx context.Context, repo string) []*github.PullRequest {
+  opts :=  &github.PullRequestListOptions{ Direction: "asc"}
+  prs, _, err := client.PullRequests.List(ctx, "deliveroo", repo, opts)
 
+  if err != nil {
+    fmt.Printf("Problem in getting repository information %v\n", err)
+    os.Exit(1)
+  }
+
+  return prs
+}
+
+func getPullRequests(client *github.Client, ctx context.Context, repo string) []PullRequest {
+  fetchedPrs := fetchPullRequests(client, ctx, repo)
+
+  prs := make([]PullRequest, 0)
+
+  for _, pr := range fetchedPrs {
+    title := *pr.Title
+    author := *pr.User.Login
+    prs = append(prs, PullRequest{title, author})
+  }
+
+  return prs
+}
+
+func main() {
   token := getToken()
-  // get go-github client
   ctx := context.Background()
   client := getClient(ctx, token)
-
   repo := getRepoOptions()
-  opts :=  &github.PullRequestListOptions{ Direction: "asc"}
 
-  result, _, err := client.PullRequests.List(ctx, "deliveroo", repo, opts)
- 
   //
   // result, _, err := client.Search.Issues(ctx, "is:open+is:pr+review-requested:hammerfunk", opts)
   // result, _, err := client.Search.Issues(ctx, "windows+label:bug+state:open", opts)
@@ -58,24 +82,11 @@ func main() {
   // https://api.github.com/search/issues/?q\=is:open+is:pr+review-requested:annebyrne
   // result, _, err := client.Organizations.List(ctx, "hammerfunk", nil)
 
-  type PullRequest struct {
-    Title, Author  string
-  }
-
   user := getCurrentUser(ctx, client)
 
-  title := *result[0].Title
-  author := *result[0].User.Login
-  pr := PullRequest{title, author}
+  pullRequests := getPullRequests(client, ctx, repo)
 
-  if err != nil {
-    fmt.Printf("Problem in getting repository information %v\n", err)
-    os.Exit(1)
-  }
-
-  
-
-  fmt.Printf("RESULT result %v\n", response)
-  fmt.Printf("RESULT result %v\n", pr)
-  fmt.Printf("RESULT result %v\n", user)
+  // fmt.Printf("RESULT result %v\n", response)
+  fmt.Printf("PullRequests %v\n", pullRequests)
+  fmt.Printf("User %v\n", user)
 }
