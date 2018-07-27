@@ -40,10 +40,16 @@ func main() {
   // https://api.github.com/search/issues/?q\=is:open+is:pr+review-requested:annebyrne
   // result, _, err := client.Organizations.List(ctx, "hammerfunk", nil)
 
+  type PullRequest struct {
+    Title  string
+  }
+
   if err != nil {
     fmt.Printf("Problem in getting repository information %v\n", err)
     os.Exit(1)
   }
 
-  fmt.Printf("RESULT result %v\n", result)
+  thing := result[0]
+
+  fmt.Printf("RESULT result %v\n", thing.Title)
 }
