@@ -23,12 +23,12 @@ func getClient(ctx context.Context, token string) *github.Client {
 }
 
 func getRepoOptions() string {
-  userInput := os.Args[1]
+  userInput := os.Args[2]
   return userInput
 }
 
 func getToken() string {
-  token := os.Args[2]
+  token := os.Args[1]
   return token
 }
 
@@ -74,7 +74,7 @@ func getPullRequests(client *github.Client, ctx context.Context, user string, re
       title := *pr.Title
       author := *pr.User.Login
       prs = append(prs, PullRequest{title, author})
-    } 
+    }
   }
 
   return prs
