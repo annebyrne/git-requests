@@ -17,14 +17,22 @@ func getClient(ctx context.Context, token string) *github.Client {
   return github.NewClient(tc)
 }
 
+func getRepoOptions() string {
+  userInput := os.Args[1]
+  return userInput
+}
+
 func main() {
 
   // get go-github client
   ctx := context.Background()
   client := getClient(ctx, "TOKEN")
 
-  result, _, err := client.Activity.ListNotifications(ctx, nil)
-  // opts :=  &github.SearchOptions{Sort: "created", Order: "asc"}
+  repo := getRepoOptions()
+  opts :=  &github.PullRequestListOptions{ Direction: "asc"}
+
+  result, _, err := client.PullRequests.List(ctx, "deliveroo", repo, opts)
+  //
   // result, _, err := client.Search.Issues(ctx, "is:open+is:pr+review-requested:hammerfunk", opts)
   // result, _, err := client.Search.Issues(ctx, "windows+label:bug+state:open", opts)
   // result, _, err := client.Search.Users(ctx, "tom+repos:%3E42+followers:%3E1000", nil)
