@@ -10,6 +10,7 @@ import (
 
 type PullRequest struct {
   Title, Author  string
+  // Reviewers      []string
 }
 
 func getClient(ctx context.Context, token string) *github.Client {
@@ -54,15 +55,26 @@ func fetchPullRequests(client *github.Client, ctx context.Context, repo string) 
   return prs
 }
 
-func getPullRequests(client *github.Client, ctx context.Context, repo string) []PullRequest {
+func requestedReview(pr github.PullRequest, user string) bool {
+  for _, reviewer := range pr.RequestedReviewers {
+    if *reviewer.Login == user {
+      return true
+    }
+  }
+  return false
+}
+
+func getPullRequests(client *github.Client, ctx context.Context, user string, repo string) []PullRequest {
   fetchedPrs := fetchPullRequests(client, ctx, repo)
 
   prs := make([]PullRequest, 0)
 
   for _, pr := range fetchedPrs {
-    title := *pr.Title
-    author := *pr.User.Login
-    prs = append(prs, PullRequest{title, author})
+    if requestedReview(*pr, user) {
+      title := *pr.Title
+      author := *pr.User.Login
+      prs = append(prs, PullRequest{title, author})
+    } 
   }
 
   return prs
@@ -74,19 +86,9 @@ func main() {
   client := getClient(ctx, token)
   repo := getRepoOptions()
 
-  //
-  // result, _, err := client.Search.Issues(ctx, "is:open+is:pr+review-requested:hammerfunk", opts)
-  // result, _, err := client.Search.Issues(ctx, "windows+label:bug+state:open", opts)
-  // result, _, err := client.Search.Users(ctx, "tom+repos:%3E42+followers:%3E1000", nil)
-  // result, _, err := client.Search.Users(ctx, "hammerfunk", nil)
-  // https://api.github.com/search/issues/?q\=is:open+is:pr+review-requested:annebyrne
-  // result, _, err := client.Organizations.List(ctx, "hammerfunk", nil)
-
   user := getCurrentUser(ctx, client)
+  pullRequests := getPullRequests(client, ctx, user, repo)
 
-  pullRequests := getPullRequests(client, ctx, repo)
-
-  // fmt.Printf("RESULT result %v\n", response)
   fmt.Printf("PullRequests %v\n", pullRequests)
-  fmt.Printf("User %v\n", user)
+
 }
