@@ -27,6 +27,17 @@ func getToken() string {
   return token
 }
 
+func getCurrentUser(ctx context.Context, client *github.Client) string {
+  result, _, authError := client.Users.Get(ctx, "")
+  user := *result.Login
+
+  if authError!= nil {
+    fmt.Printf("Problem in getting authenticated user information %v\n", authError)
+    os.Exit(1)
+  }
+  return user
+}
+
 func main() {
 
   token := getToken()
@@ -38,6 +49,7 @@ func main() {
   opts :=  &github.PullRequestListOptions{ Direction: "asc"}
 
   result, _, err := client.PullRequests.List(ctx, "deliveroo", repo, opts)
+ 
   //
   // result, _, err := client.Search.Issues(ctx, "is:open+is:pr+review-requested:hammerfunk", opts)
   // result, _, err := client.Search.Issues(ctx, "windows+label:bug+state:open", opts)
@@ -46,11 +58,11 @@ func main() {
   // https://api.github.com/search/issues/?q\=is:open+is:pr+review-requested:annebyrne
   // result, _, err := client.Organizations.List(ctx, "hammerfunk", nil)
 
-  currentUser := client.Authorization.GetUser
-
   type PullRequest struct {
     Title, Author  string
   }
+
+  user := getCurrentUser(ctx, client)
 
   title := *result[0].Title
   author := *result[0].User.Login
@@ -61,5 +73,9 @@ func main() {
     os.Exit(1)
   }
 
+  
+
+  fmt.Printf("RESULT result %v\n", response)
   fmt.Printf("RESULT result %v\n", pr)
+  fmt.Printf("RESULT result %v\n", user)
 }
