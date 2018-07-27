@@ -10,7 +10,6 @@ import (
 
 type PullRequest struct {
   Title, Author  string
-  // Reviewers      []string
 }
 
 func getClient(ctx context.Context, token string) *github.Client {
@@ -22,9 +21,9 @@ func getClient(ctx context.Context, token string) *github.Client {
   return github.NewClient(tc)
 }
 
-func getRepoOptions() string {
-  userInput := os.Args[2]
-  return userInput
+func getRepoNames() []string {
+  repos := os.Args[2:]
+  return repos
 }
 
 func getToken() string {
@@ -84,11 +83,13 @@ func main() {
   token := getToken()
   ctx := context.Background()
   client := getClient(ctx, token)
-  repo := getRepoOptions()
+  repos := getRepoNames()
 
   user := getCurrentUser(ctx, client)
-  pullRequests := getPullRequests(client, ctx, user, repo)
 
-  fmt.Printf("PullRequests %v\n", pullRequests)
-
+  for _, repo := range repos {
+    pullRequests := getPullRequests(client, ctx, user, repo)
+    fmt.Printf("%v -", repo)
+    fmt.Printf("PullRequests %v\n", pullRequests)
+  }
 }
