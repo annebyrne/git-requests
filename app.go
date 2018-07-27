@@ -22,11 +22,17 @@ func getRepoOptions() string {
   return userInput
 }
 
+func getToken() string {
+  token := os.Args[2]
+  return token
+}
+
 func main() {
 
+  token := getToken()
   // get go-github client
   ctx := context.Background()
-  client := getClient(ctx, "TOKEN")
+  client := getClient(ctx, token)
 
   repo := getRepoOptions()
   opts :=  &github.PullRequestListOptions{ Direction: "asc"}
@@ -44,12 +50,12 @@ func main() {
     Title  string
   }
 
+  pr := PullRequest{*result[0].Title}
+
   if err != nil {
     fmt.Printf("Problem in getting repository information %v\n", err)
     os.Exit(1)
   }
 
-  thing := result[0]
-
-  fmt.Printf("RESULT result %v\n", thing.Title)
+  fmt.Printf("RESULT result %v\n", pr.Title)
 }
